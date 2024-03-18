@@ -4,25 +4,29 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Scanner;
 
+import br.edu.ufersa.client.Client;
+import br.edu.ufersa.client.Employee;
 import br.edu.ufersa.services.skeletons.AuthService;
 import br.edu.ufersa.utils.GUI;
+import br.edu.ufersa.utils.ServicePorts;
 import br.edu.ufersa.utils.UserType;
 
-public class TempClient {
+public class App {
 
-    private static final int AUTH_PORT = 60000;
-
-    public TempClient() {
-        this.login();
+    public App() {
+        this.init();
     }
 
-    private void login() {
+    private void init() {
+
+        // Usuário loga no sistema
+
         Scanner cin = new Scanner(System.in);
         boolean trying = true;
 
         try {
             
-            Registry reg = LocateRegistry.getRegistry("localhost", AUTH_PORT);
+            Registry reg = LocateRegistry.getRegistry("localhost", ServicePorts.AUTH_PORT.getValue());
             AuthService stub = (AuthService) reg.lookup("Auth");
 
             do {
@@ -60,16 +64,16 @@ public class TempClient {
 
     //Por enquanto, é apenas um teste para verificar se ele tá pegando o usuário e exibindo o respectivo menu
     private void mainMenu(UserType type){
-        
+
         switch (type) {
             case CLIENT:
-                GUI.clientMenu();
+                new Client(true);
                 break;
             case EMPLOYEE:
-                GUI.employeeMenu();
+                new Employee(true);
                 break;
             default:
-                System.err.println("This user is undefined");
+                System.err.println("Undefined type");
                 break;
         }
 

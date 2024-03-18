@@ -16,7 +16,7 @@ public class GUI {
     }
 
     public static void clientMenu() {
-        System.out.println("""
+        System.out.print("""
              ============ Main Menu ============
             |   | [1] |   Search car            |
             Z   | [2] |   List all cars         Z
@@ -24,11 +24,12 @@ public class GUI {
             Z   | [4] |   Buy a car             Z
             |   | [5] |   Exit                  |
              ===================================
-            """);
+
+             Option: """);
     }
 
     public static void employeeMenu() {
-        System.out.println("""
+        System.out.print("""
              ============ Main Menu ============
             Z   | [1] |   Add a car             Z
             |   | [2] |   Update a car          |
@@ -39,7 +40,35 @@ public class GUI {
             Z   | [7] |   Buy a car             Z
             |   | [8] |   Exit                  |
              ===================================
-            """);
+
+             Option: """);
+    }
+
+    public static void searchOps() {
+        System.out.print("""
+            Searching by...?
+            [1]    -    Renavam
+            [2]    -    Name
+
+            Option: """);
+    }
+
+    public static void listOps() {
+        System.out.print("""
+            Listing by...?
+            [1]    -    General
+            [2]    -    Category
+
+            Option: """);
+    }
+
+    public static void categoryOps() {
+        System.out.print("""
+            [1]    -    Economico
+            [2]    -    Intermediario
+            [3]    -    Executivo
+
+            Categoria: """);
     }
     
     public static void clearScreen() {
