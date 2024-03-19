@@ -25,7 +25,7 @@ public class GUI {
             |   | [5] |   Exit                  |
              ===================================
 
-             Option: """);
+            Option: """);
     }
 
     public static void employeeMenu() {
@@ -41,7 +41,7 @@ public class GUI {
             |   | [8] |   Exit                  |
              ===================================
 
-             Option: """);
+            Option: """);
     }
 
     public static void searchOps() {
@@ -53,6 +53,13 @@ public class GUI {
             Option: """);
     }
 
+    public static void buyOps() {
+        System.out.print("""
+            What car do you want to check...?
+            
+            Name: """);
+    }
+
     public static void listOps() {
         System.out.print("""
             Listing by...?
@@ -61,20 +68,28 @@ public class GUI {
 
             Option: """);
     }
-
+    
     public static void categoryOps() {
         System.out.print("""
-            [1]    -    Economico
-            [2]    -    Intermediario
-            [3]    -    Executivo
-
+            [1]    -    Economy
+            [2]    -    Intermediate
+            [3]    -    Executive
+            
             Categoria: """);
+        }
+        
+    public static void stockOps() {
+        System.out.print("""
+            Checking stock by...?
+            [1]    -    General
+            [2]    -    Name
+
+            Option: """);
     }
-    
+
     public static void clearScreen() {
         try {
             final String os = System.getProperty("os.name");
-
             if (os.contains("Windows")) {
                 // Se estiver no Windows, usa o comando "cls" para limpar o console.
                 new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();

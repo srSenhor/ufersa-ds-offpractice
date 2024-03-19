@@ -6,10 +6,10 @@ import java.util.Scanner;
 
 import br.edu.ufersa.client.Client;
 import br.edu.ufersa.client.Employee;
+import br.edu.ufersa.entities.User;
 import br.edu.ufersa.services.skeletons.AuthService;
 import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
-import br.edu.ufersa.utils.UserType;
 
 public class App {
 
@@ -33,19 +33,23 @@ public class App {
                 GUI.clearScreen();
                 GUI.loginScreen();
     
-                System.out.print("Login:\t\t");
+                System.out.print("Login   : ");
                 String login = cin.nextLine();
                 
-                System.out.print("Password:\t");
+                System.out.print("Password: ");
                 String password = cin.nextLine();
 
-                UserType type = stub.authUser(login, password);
+                User user = stub.authUser(login, password);
 
-                if ( type != UserType.UNDEFINED ) {
+                if ( user != null ) {
                     System.out.println("Successful logged in!");
                     trying = false;
                     cin.nextLine(); //TODO: substituir isso por algo mais intuitivo
-                    mainMenu(type);
+                    
+                    mainMenu(user);
+
+                    stub.logout(login);
+                    System.out.println("Successful logged out!");
                 } else {
                     System.out.println("Failed to login, there is something wrong...");
                     cin.nextLine(); //TODO: substituir isso por algo mais intuitivo
@@ -61,16 +65,14 @@ public class App {
         }
     }
 
+    private void mainMenu(User user){
 
-    //Por enquanto, é apenas um teste para verificar se ele tá pegando o usuário e exibindo o respectivo menu
-    private void mainMenu(UserType type){
-
-        switch (type) {
+        switch (user.getType()) {
             case CLIENT:
-                new Client(true);
+                new Client(user);
                 break;
             case EMPLOYEE:
-                new Employee(true);
+                new Employee(user);
                 break;
             default:
                 System.err.println("Undefined type");

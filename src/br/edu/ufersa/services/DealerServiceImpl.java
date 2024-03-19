@@ -8,15 +8,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 import br.edu.ufersa.entities.Car;
+import br.edu.ufersa.entities.User;
 import br.edu.ufersa.services.skeletons.DealerService;
 import br.edu.ufersa.utils.CarType;
 
 public class DealerServiceImpl implements DealerService {
 
     private static HashMap<Long, Car> cars;
+    private static HashMap<String, Integer> cars_stock;
 
     public DealerServiceImpl() {
         cars = new HashMap<>();
+        cars_stock = new HashMap<>();
         this.init();
     }
 
@@ -27,12 +30,13 @@ public class DealerServiceImpl implements DealerService {
 
         List<Car> named_cars = new ArrayList<>();
 
+
         cars.forEach((Long renavam, Car car) -> {
             if(car.getNome().equalsIgnoreCase(name)) {
                 named_cars.add(car);
             }
         });
-
+        
         if (named_cars.isEmpty()) {
             return "no cars available for this name";
         } else {
@@ -40,7 +44,7 @@ public class DealerServiceImpl implements DealerService {
                 response.append(car.toString());
                 response.append("\n");
             }
-
+            
             return response.toString();
         }
     }
@@ -135,10 +139,18 @@ public class DealerServiceImpl implements DealerService {
     public String add(CarType categoria, long renavam, String nome, int ano_fab, float preco) throws RemoteException {
 
         Car car = cars.get(renavam);
-
+        
         if (car == null) {
             car = new Car(categoria, renavam, nome, ano_fab, preco);
             cars.put(renavam, car);
+
+            Integer quant_car = cars_stock.get(nome.toUpperCase());
+            if (quant_car == null) {
+                cars_stock.put(nome.toUpperCase(), 1);
+            } else {
+                cars_stock.put(nome.toUpperCase(), ++quant_car);
+            }
+
             return "New car: " + car.toString();
         } else {
             return "This car is already registred";
@@ -149,12 +161,17 @@ public class DealerServiceImpl implements DealerService {
     @Override
     public String remove(long renavam) throws RemoteException {
         
-        Car car = cars.get(renavam);
+        Car car = cars.remove(renavam);
 
         if (car == null) {
             return "This car isn't registred";
         } else {
-            cars.remove(renavam);
+            Integer quant_car = cars_stock.get(car.getNome());
+
+            if (quant_car > 0) {
+                cars_stock.put(car.getNome(), --quant_car);
+            } 
+
             return "Removed car: " + car;
         }
 
@@ -164,19 +181,106 @@ public class DealerServiceImpl implements DealerService {
     public String update(CarType categoria, long renavam, String nome, int ano_fab, float preco) throws RemoteException {
         
         Car car = cars.get(renavam);
-
+        
         if (car == null) {
             return "This car isn't registred";
         } else {
+            Integer quant_car = cars_stock.get(car.getNome().toUpperCase());
+
+            if (quant_car > 0) {
+                cars_stock.put(car.getNome(), --quant_car);
+            } 
+
             car.setAnoFab(ano_fab);
             car.setCategoria(categoria);
             car.setNome(nome);
             car.setPreco(preco);
             
             cars.put(renavam, car);
+
+            quant_car = cars_stock.get(car.getNome());
+            
+            if (quant_car == null) {
+                cars_stock.put(car.getNome().toUpperCase(), 1);
+            } else {
+                cars_stock.put(car.getNome().toUpperCase(), ++quant_car);
+            }
+
             return "Updated car: " + car.toString();
         }
 
+    }
+    
+    @Override
+    public String stock() throws RemoteException {
+
+        if (cars_stock.isEmpty()) {
+            return "There is no cars registred...";
+        }
+
+        StringBuilder response = new StringBuilder();
+
+        response.append("""
+                = = = = = = = =  CAR STOCK  = = = = = = = =
+                """);
+        response.append("\tThere is " + cars.size() + " cars on stock\n");
+        response.append("""
+                = = = = = = = = = = = = = = = = = = = = = =
+                """);
+
+        return response.toString();
+    }
+
+    @Override
+    public String stockByName() throws RemoteException {
+
+        if (cars_stock.isEmpty()) {
+            return "There is no cars registred...";
+        }
+
+        StringBuilder response = new StringBuilder();
+
+        response.append("""
+                = = = = = =  CAR STOCK  = = = = = =
+                """);
+
+        cars_stock.forEach((String name, Integer quant) -> {
+            response.append(name);
+            response.append("\t");
+            response.append("x" + quant);
+            response.append("\n");
+        });
+
+        response.append("""
+                = = = = = = = = = = = = = = = = = =
+                """);
+
+        return response.toString();
+    }
+
+    @Override
+    public String buy(long renavam, User user) throws RemoteException {
+        
+        Car purchased_car = cars.remove(renavam);
+        
+        if (purchased_car == null) {
+            return "This car isn't available";
+        }
+
+        user.acquireCar(purchased_car);
+        
+        Integer quant_car = cars_stock.get(purchased_car.getNome());
+        
+        if (quant_car > 0) {
+            cars_stock.put(purchased_car.getNome(), --quant_car);
+        }
+        
+        StringBuilder response = new StringBuilder();
+        response.append("User " + user.getLogin() + " acquired:\n");
+        response.append(purchased_car);
+        response.append("\n");
+
+        return response.toString();
     }
 
     private List<Car> getSorted(){
@@ -196,7 +300,7 @@ public class DealerServiceImpl implements DealerService {
 
         return car_list;
     }
-
+    
     private void init() {
 
         try {
@@ -205,7 +309,7 @@ public class DealerServiceImpl implements DealerService {
             add(CarType.INTERMEDIATE, 51029874625l, "toyota etios", 2017, 70000f);
             add(CarType.ECONOMY, 14243939238l, "ford ka", 2009, 90000f);
             add(CarType.EXECUTIVE, 29018475092l, "chevrolet cruze", 2021, 40000f);
-            add(CarType.ECONOMY, 73849201742l, "chevrolet onix", 2015, 65000f);
+            add(CarType.ECONOMY, 73849201742l, "nissan march", 2015, 65000f);
             add(CarType.EXECUTIVE, 45829637102l, "toyota corolla", 2022, 42000f);
             add(CarType.INTERMEDIATE, 37905164293l, "ford ka sedan", 2018, 60000f);
             add(CarType.EXECUTIVE, 90583274625l, "honda civic", 2020, 45000f);
@@ -219,6 +323,8 @@ public class DealerServiceImpl implements DealerService {
         }
 
     }
+
+
 
 
 }

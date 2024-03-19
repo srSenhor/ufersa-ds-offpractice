@@ -5,6 +5,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Scanner;
 
+import br.edu.ufersa.entities.User;
 import br.edu.ufersa.services.skeletons.DealerService;
 import br.edu.ufersa.utils.CarType;
 import br.edu.ufersa.utils.GUI;
@@ -16,16 +17,12 @@ public class Employee extends Client {
 
     public Employee() {}
 
-    public Employee(boolean execute) {
-        if (execute) {
-            this.exec();
-        } else {
-            System.err.println("What do you want ? =P");
-        }
+    public Employee(User user) {
+        this.exec(user);
     }
     
     @Override
-    protected void exec(){
+    protected void exec(User user){
 
         int op = 0;
 
@@ -61,7 +58,7 @@ public class Employee extends Client {
                         checkStock(stub);
                         break; 
                     case 7:
-                        buy(stub);
+                        buy(stub, user);
                         break;
                     case 8:
                         System.out.println("bye my friend!");
@@ -106,13 +103,13 @@ public class Employee extends Client {
             CarType categoria = null;
             
             switch (cat) {
-                case 0:
+                case 1:
                     categoria = CarType.ECONOMY;    
                     break;
-                case 1:
+                case 2:
                     categoria = CarType.INTERMEDIATE;        
                     break;
-                case 2:
+                case 3:
                     categoria = CarType.EXECUTIVE;        
                     break;
                 default:
@@ -120,6 +117,7 @@ public class Employee extends Client {
             }
 
             System.out.println(stub.add(categoria, renavam, nome, ano_fab, preco));
+            cin.nextLine();
 
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -135,6 +133,7 @@ public class Employee extends Client {
             cin.nextLine();
             
             System.out.println(stub.remove(renavam));
+            cin.nextLine();
 
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -168,13 +167,13 @@ public class Employee extends Client {
             CarType categoria = null;
             
             switch (cat) {
-                case 0:
+                case 1:
                     categoria = CarType.ECONOMY;    
                     break;
-                case 1:
+                case 2:
                     categoria = CarType.INTERMEDIATE;        
                     break;
-                case 2:
+                case 3:
                     categoria = CarType.EXECUTIVE;        
                     break;
                 default:
@@ -182,6 +181,7 @@ public class Employee extends Client {
             }
 
             System.out.println(stub.update(categoria, renavam, nome, ano_fab, preco));
+            cin.nextLine();
 
         } catch (RemoteException e) {
             e.printStackTrace();

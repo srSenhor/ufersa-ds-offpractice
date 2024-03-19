@@ -5,6 +5,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Scanner;
 
+import br.edu.ufersa.entities.User;
+import br.edu.ufersa.services.ThreadBuy;
 import br.edu.ufersa.services.skeletons.DealerService;
 import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
@@ -15,16 +17,12 @@ public class Client {
 
     public Client() {};
 
-    public Client(boolean execute) {
-        if (execute) {
-            this.exec();
-        } else {
-            System.err.println("What do you want ? =P");
-        }
-
+    public Client(User user) {
+        this.exec(user);
+        
     }
 
-    protected void exec() {
+    protected void exec(User user) {
 
         int op = 0;
 
@@ -51,7 +49,7 @@ public class Client {
                         checkStock(stub);
                         break; 
                     case 4:
-                        buy(stub);
+                        buy(stub, user);
                         break;
                     case 5:
                         System.out.println("bye my friend!");
@@ -95,6 +93,7 @@ public class Client {
                     break;
                 default:
                     System.err.println("undefined operation");
+                    cin.nextLine();
                     break;
             }
         } catch (RemoteException e) {
@@ -120,6 +119,7 @@ public class Client {
                     break;
                 default:
                     System.err.println("undefined operation");
+                    cin.nextLine();
                     break;
             }
         } catch (RemoteException e) {
@@ -128,10 +128,65 @@ public class Client {
     }
     
     protected void checkStock(DealerService stub){
-        System.out.println("Coming soon...");
+        GUI.stockOps();
+        int op = cin.nextInt();
+        cin.nextLine();
+
+        try {
+            switch (op) {
+                case 1:
+                    System.out.println(stub.stock());
+                    cin.nextLine();
+                    break;
+                case 2:
+                    System.out.println(stub.stockByName());
+                    cin.nextLine();
+                    break;
+                default:
+                    System.err.println("undefined operation");
+                    cin.nextLine();
+                    break;
+            }
+        } catch (RemoteException e) {
+                e.printStackTrace();
+        }    
     }
 
-    protected void buy(DealerService stub){
-        System.out.println("Coming soon...");
+    protected void buy(DealerService stub, User user){
+
+        GUI.buyOps();
+        String name = cin.nextLine();
+
+        String cars_available = "";
+        Thread t0 = new Thread(new ThreadBuy(stub, name, cars_available));
+        t0.start();
+
+        try {
+            
+            if (cars_available.equals("This car isn't available")) {
+                System.out.println(cars_available);
+                return;
+            }
+            
+            long renavam = cin.nextLong();
+            cin.nextLine();
+
+            System.out.print("Password: ");
+            String attempt_password = cin.nextLine();
+
+            if (attempt_password.equals(user.getPassword())) {
+                System.out.println(stub.buy(renavam, user));
+                cin.nextLine();
+            } else {
+                System.err.println("wrong password...");
+                cin.nextLine();
+            }
+
+            t0.interrupt();
+            
+        } catch (RemoteException e) {
+                e.printStackTrace();
+        }
+        
     }
 }

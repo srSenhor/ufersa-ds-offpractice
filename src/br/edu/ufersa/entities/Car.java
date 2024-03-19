@@ -9,7 +9,6 @@ public class Car {
     private String nome;
     private int ano_fab;
     private float preco;
-    private static int quantidade = 0;
 
     public Car(CarType categoria, long renavam, String nome, int ano_fab, float preco) {
         this.setCategoria(categoria);
@@ -17,7 +16,6 @@ public class Car {
         this.setNome(nome);
         this.setAnoFab(ano_fab);
         this.setPreco(preco);
-        incrementQuantidade();
     }
 
     public CarType getCategoria() {
@@ -67,23 +65,14 @@ public class Car {
         }
     }
 
-    
-
-    public static int getQuantidade() {
-        return quantidade;
-    }
-
-    public static void incrementQuantidade() {
-        quantidade++;
-    }
-    public static void decrementQuantidade() {
-        quantidade--;
-    }
-
     // TODO: formatar para algo mais intuitivo depois
     @Override
     public String toString() {
-        return "Car [categoria=" + categoria + ", renavam=" + renavam + ", nome=" + nome
-                + ", ano_fab=" + ano_fab + ", preco=" + preco + "]";
+        return  "= = = = = =  " + nome + "  = = = = = =\n" +
+                "Renavam   " + renavam      + "\n" +
+                "Ano       " + ano_fab      + "\n" +
+                "Preco R$  " + preco        + "\n" +
+                "Categoria " + categoria    + "\n" +
+                "= = = = = = = = = = = = = = = = = = = \n";
     }  
 }

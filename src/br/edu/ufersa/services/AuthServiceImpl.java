@@ -17,19 +17,27 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public UserType authUser(String login, String password) throws RemoteException {
+    public User authUser(String login, String password) throws RemoteException {
         User user = users.get(login);
-        if (user == null) { return UserType.UNDEFINED; }
+        if (user == null) { return null; }
         if (user.getPassword().equals(password) && !user.isLogged()) {
             user.userLoggedIn();
-            return user.getType();
+            return user;
         }
-        return UserType.UNDEFINED;
+        return null;
     }
 
     @Override
     public void recordClient(String login, String password, UserType type) throws RemoteException {
         users.put(login, new User(login, password, type));
+    }
+
+    @Override
+    public boolean logout(String login) throws RemoteException {
+        User user = users.get(login);
+        if (user == null || user.isLogged() == false ) { return false; }
+        user.userLoggedOut();
+        return true;
     }
 
     private void init(){
@@ -40,5 +48,6 @@ public class AuthServiceImpl implements AuthService {
             e.printStackTrace();
         }
     }
+
 
 }
