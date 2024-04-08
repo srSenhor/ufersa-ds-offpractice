@@ -14,6 +14,7 @@ O que tiver riscado e com um ✔️ eu já concluí, o que tiver riscado com um 
 - [x] ~~Cliente deve ter permissão de Pesquisar, Listar, Ver Estoque e Comprar (tudo fica no serviço, mas ele pega o tipo do usuário pra permitir isso)~~
 - [x] ~~Funcionário pode fazer tudo que cliente faz (por herança) e também pode Adicionar, Remover e Atualizar atributos~~
 - [x] ~~Fazer a inicialização do sistema conforme os requisitos~~
+- [ ] Adicionar requisitos de segurança pra pratica off 3
 
 ### Coisas que eu **penso** em fazer:
 
