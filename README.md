@@ -24,7 +24,7 @@ Quanto às novas técnicas adicionadas...
 
 - **Sincronização**: serviços devem ter acesso sincronizado às funcionalidades concorrentes
 - **Replicação**: no mínimo três réplicas do serviço da loja de carros e, por consequência, três réplicas da base de dados e do gateway
-- **Tolerância a falhas**: para simular uma falha - usaremos o thread.sleep() - e verificar o tratamento de falhas, tem-se dois cenários:
+- **Tolerância a falhas** (opcional): para simular uma falha - usaremos o thread.sleep() - e verificar o tratamento de falhas, tem-se dois cenários:
   - falha no gateway
   - falha no réplica da loja de carros
 
