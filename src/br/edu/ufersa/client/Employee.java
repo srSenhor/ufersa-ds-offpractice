@@ -6,7 +6,7 @@ import java.rmi.registry.Registry;
 import java.util.Scanner;
 
 import br.edu.ufersa.entities.User;
-import br.edu.ufersa.services.skeletons.DealerService;
+import br.edu.ufersa.server.services.skeletons.DealerService;
 import br.edu.ufersa.utils.CarType;
 import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
@@ -21,6 +21,7 @@ public class Employee extends Client {
         this.exec(user);
     }
     
+    // TODO: Reescrever para funcionar com os requests
     @Override
     protected void exec(User user){
 

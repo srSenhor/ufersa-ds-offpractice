@@ -1,8 +1,8 @@
-package br.edu.ufersa.services;
+package br.edu.ufersa.server.services;
 
 import java.rmi.RemoteException;
 
-import br.edu.ufersa.services.skeletons.DealerService;
+import br.edu.ufersa.server.services.skeletons.DealerService;
 import br.edu.ufersa.utils.GUI;
 
 public class ThreadBuy implements Runnable {
@@ -17,6 +17,7 @@ public class ThreadBuy implements Runnable {
         this.cars_available = cars_available;
     }
 
+    // TODO: Melhorar a visualização da tela
     @Override
     public void run() {
         try {

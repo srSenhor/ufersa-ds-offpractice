@@ -1,10 +1,10 @@
-package br.edu.ufersa.services;
+package br.edu.ufersa.server.services;
 
 import java.rmi.RemoteException;
 import java.util.HashMap;
 
 import br.edu.ufersa.entities.User;
-import br.edu.ufersa.services.skeletons.AuthService;
+import br.edu.ufersa.server.services.skeletons.AuthService;
 import br.edu.ufersa.utils.UserType;
 
 public class AuthServiceImpl implements AuthService {

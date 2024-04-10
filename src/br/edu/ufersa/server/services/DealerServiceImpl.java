@@ -1,4 +1,4 @@
-package br.edu.ufersa.services;
+package br.edu.ufersa.server.services;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -9,11 +9,13 @@ import java.util.List;
 
 import br.edu.ufersa.entities.Car;
 import br.edu.ufersa.entities.User;
-import br.edu.ufersa.services.skeletons.DealerService;
+import br.edu.ufersa.server.services.skeletons.DealerService;
 import br.edu.ufersa.utils.CarType;
 
 public class DealerServiceImpl implements DealerService {
 
+    // TODO: Separar o banco de dados do serviço
+    // TODO: Refatorar pra trabalhar só com o request
     private static HashMap<Long, Car> cars;
     private static HashMap<String, Integer> cars_stock;
 

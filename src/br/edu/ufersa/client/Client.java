@@ -6,8 +6,8 @@ import java.rmi.registry.Registry;
 import java.util.Scanner;
 
 import br.edu.ufersa.entities.User;
-import br.edu.ufersa.services.ThreadBuy;
-import br.edu.ufersa.services.skeletons.DealerService;
+import br.edu.ufersa.server.services.ThreadBuy;
+import br.edu.ufersa.server.services.skeletons.DealerService;
 import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
 
@@ -22,6 +22,7 @@ public class Client {
         
     }
 
+    // TODO: Reescrever para funcionar com os requests
     protected void exec(User user) {
 
         int op = 0;

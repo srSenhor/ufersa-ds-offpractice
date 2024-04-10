@@ -1,4 +1,4 @@
-package br.edu.ufersa.services.skeletons;
+package br.edu.ufersa.server.services.skeletons;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -8,6 +8,7 @@ import br.edu.ufersa.utils.CarType;
 
 public interface DealerService extends Remote {
 
+    // TODO: Deixar só o processo que vai cuidar do request
     String searchByName(String name) throws RemoteException;
     String searchByRenavam(long renavam) throws RemoteException;
     String list() throws RemoteException;

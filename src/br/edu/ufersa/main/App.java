@@ -7,7 +7,7 @@ import java.util.Scanner;
 import br.edu.ufersa.client.Client;
 import br.edu.ufersa.client.Employee;
 import br.edu.ufersa.entities.User;
-import br.edu.ufersa.services.skeletons.AuthService;
+import br.edu.ufersa.server.services.skeletons.AuthService;
 import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
 
