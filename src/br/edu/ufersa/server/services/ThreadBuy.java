@@ -24,7 +24,8 @@ public class ThreadBuy implements Runnable {
 
             do {
                 GUI.clearScreen();
-                cars_available = stub.searchByName(name);
+                // TODO: arrumar isso pra ele conseguir exibir de novo
+                // cars_available = stub.searchByName(name);
                 
                 System.out.println("""
                     This cars are available
@@ -39,12 +40,11 @@ public class ThreadBuy implements Runnable {
                         
                 Thread.sleep(10000l);
             } while (!cars_available.equals("This car isn't available"));
-
                         
         } catch (InterruptedException e) {
             e.printStackTrace();
-        } catch (RemoteException e) {
-            e.printStackTrace();
+        // } catch (RemoteException e) {
+        //     e.printStackTrace();
         }
 
     }

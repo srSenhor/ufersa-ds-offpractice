@@ -3,10 +3,20 @@ package br.edu.ufersa.client;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 
-import br.edu.ufersa.entities.User;
-import br.edu.ufersa.server.services.ThreadBuy;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
+import br.edu.ufersa.entities.Message;
+import br.edu.ufersa.entities.Request;
+import br.edu.ufersa.entities.SessionLogin;
+import br.edu.ufersa.security.SecurityCipher;
+// import br.edu.ufersa.server.services.ThreadBuy;
 import br.edu.ufersa.server.services.skeletons.DealerService;
 import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
@@ -14,23 +24,25 @@ import br.edu.ufersa.utils.ServicePorts;
 public class Client {
 
     private final Scanner cin = new Scanner(System.in);
+    protected SessionLogin login;
+    protected DealerService dealerStub;
 
     public Client() {};
 
-    public Client(User user) {
-        this.exec(user);
-        
+    public Client(SessionLogin login) {
+        this.login = login;
+        this.exec();
     }
 
-    // TODO: Reescrever para funcionar com os requests
-    protected void exec(User user) {
+
+    protected void exec() {
 
         int op = 0;
 
         try {
 
             Registry reg = LocateRegistry.getRegistry("localhost", ServicePorts.DEALER_PORT.getValue());
-            DealerService stub = (DealerService) reg.lookup("Dealer");
+            this.dealerStub = (DealerService) reg.lookup("Dealer");
             
             do {
                 GUI.clearScreen();
@@ -41,16 +53,73 @@ public class Client {
 
                 switch (op) {
                     case 1:
-                        search(stub);
+                        GUI.searchOps();
+                        int searchOption = cin.nextInt();
+                        cin.nextLine();
+
+                        if (searchOption == 1) {
+                            System.out.print("Renavam: ");
+                            long renavam = cin.nextLong();
+                            cin.nextLine();
+
+                            send(op, 0, login.getUsername(), renavam, null, -1, -1, searchOption);
+
+                        } else {
+                            System.out.print("Name: ");
+                            String name = cin.nextLine();
+
+                            send(op, 0, login.getUsername(), -1, name, -1, -1, searchOption);
+                        }
+                        
+                        System.out.println("Press any key to continue...");
+                        cin.nextLine();
                         break;
                     case 2:
-                        list(stub);
-                        break;     
+                        GUI.listOps();
+                        int listOption = cin.nextInt();
+                        cin.nextLine();
+
+                        send(op, 0, login.getUsername(), -1L, null, -1, -1.0f, listOption);
+                        
+                        System.out.println("Press any key to continue...");
+                        cin.nextLine();
+                        break;
                     case 3:
-                        checkStock(stub);
-                        break; 
+                        GUI.stockOps();
+                        int stockOption = cin.nextInt();
+                        cin.nextLine();
+
+                        send(op, 0, login.getUsername(), -1L, null, -1, -1.0f, stockOption);
+                        
+                        System.out.println("Press any key to continue...");
+                        cin.nextLine();
+                        break;
                     case 4:
-                        buy(stub, user);
+                        GUI.buyOps();
+                        String name = cin.nextLine();
+
+                        send(1, 0, login.getUsername(), -1, name, -1, -1, 2);
+
+                        // TODO: Recriar o threadbuy pra ficar printando os carros disponíveis
+                        
+                        
+                        System.out.print("Renavam: ");
+                        long renavam = cin.nextLong();
+                        cin.nextLine();
+                        
+                        System.out.println("Are you sure you want to buy this car? [y] for yes / [n] for no");
+                        String confirm = cin.next(); 
+
+                        if (confirm.toLowerCase().charAt(0) == 'y') {
+                            send(op, 0, login.getUsername(), renavam, name, -1, -1, -1);
+                            cin.nextLine();
+                        } else {
+                            System.err.println("Cancelled operation");
+                            cin.nextLine();
+                        }
+
+                        System.out.println("Press any key to continue...");
+                        cin.nextLine();
                         break;
                     case 5:
                         System.out.println("bye my friend!");
@@ -69,125 +138,49 @@ public class Client {
 
     }
 
-    protected void search(DealerService stub){
-
-        GUI.searchOps();
-        int op = cin.nextInt();
-        cin.nextLine();
-
-        try {
-            switch (op) {
-                case 1:
-                    System.out.print("Renavam: "); 
-                    long renavam = cin.nextLong();
-                    cin.nextLine();
-                    
-                    System.out.println(stub.searchByRenavam(renavam));
-                    cin.nextLine();
-                    break;
-                case 2:
-                    System.out.print("Name: "); 
-                    String name = cin.nextLine();
-                    
-                    System.out.println(stub.searchByName(name));
-                    cin.nextLine();
-                    break;
-                default:
-                    System.err.println("undefined operation");
-                    cin.nextLine();
-                    break;
-            }
-        } catch (RemoteException e) {
-                e.printStackTrace();
-        }
-    }
-
-    protected void list(DealerService stub){
-
-        GUI.listOps();
-        int op = cin.nextInt();
-        cin.nextLine();
-
-        try {
-            switch (op) {
-                case 1:
-                    System.out.println(stub.list());
-                    cin.nextLine();
-                    break;
-                case 2:
-                    System.out.println(stub.listByCategory());
-                    cin.nextLine();
-                    break;
-                default:
-                    System.err.println("undefined operation");
-                    cin.nextLine();
-                    break;
-            }
-        } catch (RemoteException e) {
-                e.printStackTrace();
-        }
-    }
     
-    protected void checkStock(DealerService stub){
-        GUI.stockOps();
-        int op = cin.nextInt();
-        cin.nextLine();
-
-        try {
-            switch (op) {
-                case 1:
-                    System.out.println(stub.stock());
-                    cin.nextLine();
-                    break;
-                case 2:
-                    System.out.println(stub.stockByName());
-                    cin.nextLine();
-                    break;
-                default:
-                    System.err.println("undefined operation");
-                    cin.nextLine();
-                    break;
-            }
-        } catch (RemoteException e) {
-                e.printStackTrace();
-        }    
-    }
-
-    protected void buy(DealerService stub, User user){
-
-        GUI.buyOps();
-        String name = cin.nextLine();
-
-        String cars_available = "";
-        Thread t0 = new Thread(new ThreadBuy(stub, name, cars_available));
-        t0.start();
-
-        try {
-            
-            if (cars_available.equals("This car isn't available")) {
-                System.out.println(cars_available);
-                return;
-            }
-            
-            long renavam = cin.nextLong();
-            cin.nextLine();
-
-            System.out.print("Password: ");
-            String attempt_password = cin.nextLine();
-
-            if (attempt_password.equals(user.getPassword())) {
-                System.out.println(stub.buy(renavam, user));
-                cin.nextLine();
-            } else {
-                System.err.println("wrong password...");
-                cin.nextLine();
-            }
-
-            t0.interrupt();
-            
-        } catch (RemoteException e) {
-                e.printStackTrace();
-        }
+    protected void send(int opType, int userType, String username, long renavam, String name, int fab, float price, int category) {
+        String request = new Request(opType, userType, username, renavam, name, fab, price, category).toString();
         
+        try {
+            
+            SecurityCipher bc = new SecurityCipher(this.login.getAesKey());
+            request = bc.enc(request);
+
+            String hash = bc.genHash(request);           
+            hash = this.login.getSessionRSA().sign(hash);
+
+            Message response = dealerStub.receive(username, new Message(request, hash));
+
+            if (response == null) {
+                System.err.println("cannot do this, please try again...'");
+            } else {
+                String responseTestHash = this.login.getSessionRSA().checkSign(response.getHash(), this.login.getServerPuKey());
+    
+                if(!bc.genHash(response.getContent()).equals(responseTestHash)) {
+                    System.err.println("an error has ocurred, please try again");
+                } else {
+                    System.err.println(bc.dec(response.getContent()));
+                }
+                
+            }
+
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {           
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {            
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {            
+            e.printStackTrace();
+        } catch (BadPaddingException e) {           
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
+
 }

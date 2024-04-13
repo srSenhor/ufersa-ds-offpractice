@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 import br.edu.ufersa.client.Client;
 import br.edu.ufersa.client.Employee;
-import br.edu.ufersa.entities.User;
+import br.edu.ufersa.entities.SessionLogin;
 import br.edu.ufersa.server.services.skeletons.AuthService;
 import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
@@ -24,29 +24,32 @@ public class App {
         Scanner cin = new Scanner(System.in);
         boolean trying = true;
 
+
         try {
             
             Registry reg = LocateRegistry.getRegistry("localhost", ServicePorts.AUTH_PORT.getValue());
             AuthService stub = (AuthService) reg.lookup("Auth");
+
+            SessionLogin login;
 
             do {
                 GUI.clearScreen();
                 GUI.loginScreen();
     
                 System.out.print("Login   : ");
-                String login = cin.nextLine();
+                String username = cin.nextLine();
                 
                 System.out.print("Password: ");
                 String password = cin.nextLine();
 
-                User user = stub.authUser(login, password);
+                login = stub.auth(username, password);
 
-                if ( user != null ) {
+                if ( login != null ) {
                     System.out.println("Successful logged in!");
                     trying = false;
                     cin.nextLine(); //TODO: substituir isso por algo mais intuitivo
                     
-                    mainMenu(user);
+                    mainMenu(login);
 
                     stub.logout(login);
                     System.out.println("Successful logged out!");
@@ -65,14 +68,14 @@ public class App {
         }
     }
 
-    private void mainMenu(User user){
+    private void mainMenu(SessionLogin login){
 
-        switch (user.getType()) {
+        switch (login.getType()) {
             case CLIENT:
-                new Client(user);
+                new Client(login);
                 break;
             case EMPLOYEE:
-                new Employee(user);
+                new Employee(login);
                 break;
             default:
                 System.err.println("Undefined type");

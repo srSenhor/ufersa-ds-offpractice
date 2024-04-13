@@ -5,17 +5,20 @@ import javax.crypto.SecretKey;
 
 import br.edu.ufersa.security.RSAImpl;
 import br.edu.ufersa.utils.RSAKey;
+import br.edu.ufersa.utils.UserType;
 
-public class SessionLogin implements Serializable{
+public class SessionLogin implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private String login;
+    private String username;
+    private UserType type;
     private RSAImpl sessionRSA;
     private RSAKey serverPuKey;
     private SecretKey aesKey;
 
-    public SessionLogin(String login, RSAImpl sessionRSA, RSAKey serverPuKey, SecretKey sKey) {
-        this.login = login;
+    public SessionLogin(String username, UserType type, RSAImpl sessionRSA, RSAKey serverPuKey, SecretKey sKey) {
+        this.username = username;
+        this.type = type;
         this.setSessionRSA(sessionRSA);
         this.setSKey(sKey);
         this.setServerPuKey(serverPuKey);
@@ -45,8 +48,12 @@ public class SessionLogin implements Serializable{
         }
     }
 
-    public String getLogin() {
-        return login;
+    public String getUsername() {
+        return username;
+    }
+
+    public UserType getType() {
+        return type;
     }
 
     public RSAImpl getSessionRSA() {
@@ -64,7 +71,7 @@ public class SessionLogin implements Serializable{
     // Para fins de debug
     @Override
     public String toString() {
-        return "SessionLogin [login=" + login + ", sessionRSA=" + sessionRSA + ", serverPuKey=" + serverPuKey
+        return "SessionLogin [login=" + username + ", sessionRSA=" + sessionRSA + ", serverPuKey=" + serverPuKey
                 + ", aesKey=" + aesKey + "]";
     }
 

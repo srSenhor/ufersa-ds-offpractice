@@ -31,14 +31,14 @@ public class GUI {
     public static void employeeMenu() {
         System.out.print("""
              ============ Main Menu ============
-            Z   | [1] |   Add a car             Z
-            |   | [2] |   Update a car          |
-            Z   | [3] |   Remove a car          Z
-            |   | [4] |   Search car            |
-            Z   | [5] |   List all cars         Z
-            |   | [6] |   Check stock           |
-            Z   | [7] |   Buy a car             Z
-            |   | [8] |   Exit                  |
+            |   | [1] |   Search car            |
+            Z   | [2] |   List all cars         Z
+            |   | [3] |   Check stock           |
+            Z   | [4] |   Buy a car             Z
+            |   | [5] |   Add a car             |
+            Z   | [6] |   Update a car          Z
+            |   | [7] |   Remove a car          |
+            Z   | [8] |   Exit                  Z
              ===================================
 
             Option: """);
@@ -71,9 +71,9 @@ public class GUI {
     
     public static void categoryOps() {
         System.out.print("""
-            [1]    -    Economy
-            [2]    -    Intermediate
-            [3]    -    Executive
+            [0]    -    Economy
+            [1]    -    Intermediate
+            [2]    -    Executive
             
             Categoria: """);
         }

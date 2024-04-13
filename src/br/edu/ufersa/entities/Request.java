@@ -1,8 +1,11 @@
 package br.edu.ufersa.entities;
 
+// import br.edu.ufersa.utils.UserType;
+
 public class Request {
 
     private int opType;
+    private int userType;
     private String login;
     private long renavam;
     private String name;
@@ -10,8 +13,9 @@ public class Request {
     private float price;
     private int category;
 
-    public Request(int opType, String login, long renavam, String name, int fab, float price, int category) {
+    public Request(int opType, int userType, String login, long renavam, String name, int fab, float price, int category) {
         this.opType = opType;
+        this.userType = userType;
         this.login = login;
         this.renavam = renavam;
         this.name = name;
@@ -22,6 +26,10 @@ public class Request {
 
     public int getOpType() {
         return opType;
+    }
+
+    public int getUserType() {
+        return userType;
     }
 
     public String getLogin() {
@@ -50,20 +58,21 @@ public class Request {
 
     @Override
     public String toString() {
-        return opType + "/" + login + "/" + renavam + "/" + name + "/" + fab + "/" + price + "/" + category;
+        return opType + "/" + userType + "/" + login + "/" + renavam + "/" + name + "/" + fab + "/" + price + "/" + category;
     }
 
     public static Request fromString(String text) {
         String fields[] = text.split("/");
         int opType = Integer.parseInt(fields[0]);
-        String login = fields[1];
-        long renavam = Long.parseLong(fields[2]);
-        String name = fields[3];
-        int fab = Integer.parseInt(fields[4]);
-        float price = Float.parseFloat(fields[5]);
-        int category = Integer.parseInt(fields[6]);
+        int userType = Integer.parseInt(fields[1]);
+        String login = fields[2];
+        long renavam = Long.parseLong(fields[3]);
+        String name = fields[4];
+        int fab = Integer.parseInt(fields[5]);
+        float price = Float.parseFloat(fields[6]);
+        int category = Integer.parseInt(fields[7]);
 
-        return new Request(opType, login, renavam, name, fab, price,  category);
+        return new Request(opType, userType, login, renavam, name, fab, price,  category);
     }
 }
 
