@@ -10,6 +10,7 @@ import br.edu.ufersa.server.services.SessionServiceImpl;
 import br.edu.ufersa.server.services.skeletons.AuthService;
 import br.edu.ufersa.server.services.skeletons.DealerService;
 import br.edu.ufersa.server.services.skeletons.SessionService;
+import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
 
 public class GatewayServer {
@@ -17,9 +18,8 @@ public class GatewayServer {
     // TODO: "Threadficar" essa classe para poderem ser lançadas várias réplicas
     // TODO: Implementar firewall
     public static void main(String[] args) {
-
         try {
-
+            
             SessionServiceImpl sessionObjRef = new SessionServiceImpl();
             SessionService sessionSkeleton = (SessionService) UnicastRemoteObject.exportObject(sessionObjRef, 0);
             
@@ -33,21 +33,21 @@ public class GatewayServer {
             LocateRegistry.createRegistry( ServicePorts.DEALER_PORT.getValue() );
             Registry dealerReg = LocateRegistry.getRegistry( ServicePorts.DEALER_PORT.getValue() );
             dealerReg.bind("Dealer", dealerSkeleton);
-
+            
             AuthServiceImpl authObjRef = new AuthServiceImpl();
             AuthService authSkeleton = (AuthService) UnicastRemoteObject.exportObject(authObjRef, 0);
-
+            
             LocateRegistry.createRegistry( ServicePorts.AUTH_PORT.getValue() );
             Registry authReg = LocateRegistry.getRegistry( ServicePorts.AUTH_PORT.getValue() );
             authReg.bind("Auth", authSkeleton);
-
+            
+            GUI.clearScreen();
             System.out.println("Server is running now: ");
 
         } catch (Exception e) {
             System.err.println("An error has ocurred in server: " + e.getMessage());
             e.printStackTrace();
         }
-
     }
 
 }

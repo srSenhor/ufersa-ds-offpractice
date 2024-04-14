@@ -51,4 +51,10 @@ public class User implements Serializable {
             this.my_cars.add(car);
         }
     }
+
+    @Override
+    public String toString() {
+        return "User [isLogged=" + isLogged + ", login=" + login + ", password=" + password + ", type=" + type + "]";
+    }
+        
 }

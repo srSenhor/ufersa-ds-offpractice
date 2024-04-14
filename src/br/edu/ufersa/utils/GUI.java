@@ -2,17 +2,21 @@ package br.edu.ufersa.utils;
 
 public class GUI {
 
-    public static void loginScreen() {
-        System.out.println("""
-             ===================================
-            |                                   |
-            |       Hey! Welcome to the         |
-            |   Car Dealership System \\(^u^)/   |
-            |                                   |
-            |    Please, log-in to continue!    |
-            |                                   |
-             ===================================
-            """);
+    public static void entryScreen() {
+        System.out.print("""
+             =======================================
+            |                                       |
+            |         Hey! Welcome to this          |
+            |    Car Dealership Service  \\(^u^)/    |
+            |                                       |
+            |      Please, log-in or create an      |
+            |          account to continue!         |
+            |                                       |
+            |     [1] Login on your account         |  
+            |     [2] Create an account             |  
+            |                                       |
+             =======================================
+            Option: """);
     }
 
     public static void clientMenu() {

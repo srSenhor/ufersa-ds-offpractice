@@ -33,12 +33,16 @@ public class SessionServiceImpl implements SessionService {
     public void openSession(String username, SessionLogin login) throws RemoteException {
         session_pukeys.put(username, login.getSessionRSA().getPublicKey());
         session_aes_keys.put(username, login.getAesKey());
+
+        System.out.println("SESSION: Opened session -> user " + username);
     }
 
     @Override
     public void closeSession(String username) throws RemoteException {
         session_pukeys.remove(username);
         session_aes_keys.remove(username);
+
+        System.out.println("SESSION: Closed session -> user " + username);
     }
 
 }

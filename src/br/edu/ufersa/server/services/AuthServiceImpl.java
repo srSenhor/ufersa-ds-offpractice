@@ -34,7 +34,11 @@ public class AuthServiceImpl implements AuthService {
     public SessionLogin auth(String username, String password) throws RemoteException {
         User user = users.get(username);
 
-        if (user == null) { return null; }
+        if (user == null) { 
+            System.out.println("AUTH: ERROR! User " + username + " doesn't exists");
+            return null; 
+        }
+
         if (user.getPassword().equals(password) && !user.isLogged()) {
             SecurityCipher bc = null;
             SessionLogin login = null;
@@ -51,14 +55,48 @@ public class AuthServiceImpl implements AuthService {
             user.userLoggedIn();
             sessionStub.openSession(username, login);
             
+            System.out.println("AUTH: User " + username + " logged in");    
+
             return login;
         }
+
+        System.out.println("AUTH: ERROR! Password for " + username + " is wrong");
         return null;
     }
 
     @Override
-    public void recordClient(String login, String password, UserType type) throws RemoteException {
-        users.put(login, new User(login, password, type));
+    public SessionLogin signup(String username, String password, UserType type) throws RemoteException {     
+        if(username.isBlank() || password.isBlank() || type == UserType.UNDEFINED)
+            return null;
+        
+        User user = users.get(username);
+
+        if (user != null) {
+            System.out.println("AUTH: ERROR! User " + username + " already exists");
+            return null;
+        }
+
+        user = new User(username, password, type);
+        users.put(username, user);
+
+        SecurityCipher bc = null;
+        SessionLogin login = null;
+
+        try {
+
+            bc = new SecurityCipher();
+            login = new SessionLogin(user.getLogin(), user.getType(), new RSAImpl(), serverPuKey, bc.getKey());
+        
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        user.userLoggedIn();
+        sessionStub.openSession(username, login);
+            
+        System.out.println("AUTH: New user created -> " + user.toString());
+
+        return login;
     }
 
     @Override
@@ -80,8 +118,8 @@ public class AuthServiceImpl implements AuthService {
 
             serverPuKey = dealerStub.getPuKey();
 
-            recordClient("babaganush", "senha123", UserType.CLIENT);
-            recordClient("silvao", "senha456", UserType.EMPLOYEE);
+            logout(signup("babaganush", "senha123", UserType.CLIENT));
+            logout(signup("silvao", "senha456", UserType.EMPLOYEE));
 
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -90,6 +128,5 @@ public class AuthServiceImpl implements AuthService {
             e.printStackTrace();
         }
     }
-
 
 }

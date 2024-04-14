@@ -16,7 +16,6 @@ import br.edu.ufersa.entities.Message;
 import br.edu.ufersa.entities.Request;
 import br.edu.ufersa.entities.SessionLogin;
 import br.edu.ufersa.security.SecurityCipher;
-// import br.edu.ufersa.server.services.ThreadBuy;
 import br.edu.ufersa.server.services.skeletons.DealerService;
 import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
@@ -24,6 +23,7 @@ import br.edu.ufersa.utils.ServicePorts;
 public class Client {
 
     private final Scanner cin = new Scanner(System.in);
+    private final int USER_TYPE = 0;
     protected SessionLogin login;
     protected DealerService dealerStub;
 
@@ -34,6 +34,36 @@ public class Client {
         this.exec();
     }
 
+    // class ThreadRefresh implements Runnable {
+
+    //     private Message message;
+    //     private String name;
+    //     private int userType;
+    
+    //     public ThreadRefresh(Message message, String name, int userType){
+    //         this.message = message;
+    //         this.name = name;
+    //         this.userType = userType;
+    //     }
+    
+    //     @Override
+    //     public void run() {
+    //         while (!Thread.currentThread().isInterrupted()) {
+    //             try {
+                    
+    //             message.setContent(send(1, userType, login.getUsername(), -1, name, -1, -1, 2));
+    //             Thread.sleep(100L);
+                
+    //             } catch (InterruptedException e) {
+    //                 throw new RuntimeException();
+                    
+    //             }
+    //         }
+    //     }
+        
+    // }
+
+    //TODO voltar ao modelo antigo com várias funções e chamar elas no switch case
 
     protected void exec() {
 
@@ -51,72 +81,29 @@ public class Client {
                 op = cin.nextInt();
                 cin.nextLine();
 
+                Message response = new Message("", "");
+
                 switch (op) {
                     case 1:
-                        GUI.searchOps();
-                        int searchOption = cin.nextInt();
-                        cin.nextLine();
+                        search(response, op);
 
-                        if (searchOption == 1) {
-                            System.out.print("Renavam: ");
-                            long renavam = cin.nextLong();
-                            cin.nextLine();
-
-                            send(op, 0, login.getUsername(), renavam, null, -1, -1, searchOption);
-
-                        } else {
-                            System.out.print("Name: ");
-                            String name = cin.nextLine();
-
-                            send(op, 0, login.getUsername(), -1, name, -1, -1, searchOption);
-                        }
-                        
                         System.out.println("Press any key to continue...");
                         cin.nextLine();
                         break;
                     case 2:
-                        GUI.listOps();
-                        int listOption = cin.nextInt();
-                        cin.nextLine();
-
-                        send(op, 0, login.getUsername(), -1L, null, -1, -1.0f, listOption);
+                        list(response, op);
                         
                         System.out.println("Press any key to continue...");
                         cin.nextLine();
                         break;
                     case 3:
-                        GUI.stockOps();
-                        int stockOption = cin.nextInt();
-                        cin.nextLine();
-
-                        send(op, 0, login.getUsername(), -1L, null, -1, -1.0f, stockOption);
+                        stock(response, op);
                         
                         System.out.println("Press any key to continue...");
                         cin.nextLine();
                         break;
                     case 4:
-                        GUI.buyOps();
-                        String name = cin.nextLine();
-
-                        send(1, 0, login.getUsername(), -1, name, -1, -1, 2);
-
-                        // TODO: Recriar o threadbuy pra ficar printando os carros disponíveis
-                        
-                        
-                        System.out.print("Renavam: ");
-                        long renavam = cin.nextLong();
-                        cin.nextLine();
-                        
-                        System.out.println("Are you sure you want to buy this car? [y] for yes / [n] for no");
-                        String confirm = cin.next(); 
-
-                        if (confirm.toLowerCase().charAt(0) == 'y') {
-                            send(op, 0, login.getUsername(), renavam, name, -1, -1, -1);
-                            cin.nextLine();
-                        } else {
-                            System.err.println("Cancelled operation");
-                            cin.nextLine();
-                        }
+                        buy(response, op);
 
                         System.out.println("Press any key to continue...");
                         cin.nextLine();
@@ -138,10 +125,90 @@ public class Client {
 
     }
 
-    
-    protected void send(int opType, int userType, String username, long renavam, String name, int fab, float price, int category) {
-        String request = new Request(opType, userType, username, renavam, name, fab, price, category).toString();
+    protected void search(Message response, int op) {
+        GUI.searchOps();
+        int searchOption = cin.nextInt();
+        cin.nextLine();
+
+        if (searchOption == 1) {
+            System.out.print("Renavam: ");
+            long renavam = cin.nextLong();
+            cin.nextLine();
+
+            response.setContent(send(op, USER_TYPE, login.getUsername(), renavam, null, -1, -1, searchOption));
+
+        } else {
+            System.out.print("Name: ");
+            String name = cin.nextLine();
+
+            response.setContent(send(op, USER_TYPE, login.getUsername(), -1, name, -1, -1, searchOption));
+        }
+
+        System.out.println(response.getContent());
+    }
+
+    protected void list(Message response, int op) {
+        GUI.listOps();
+        int listOption = cin.nextInt();
+        cin.nextLine();
+
+        response.setContent(send(op, USER_TYPE, login.getUsername(), -1L, null, -1, -1.0f, listOption));
+        System.out.println(response.getContent());
+    }
+
+    protected void stock(Message response, int op) {
+        GUI.stockOps();
+        int stockOption = cin.nextInt();
+        cin.nextLine();
+
+        response.setContent(send(op, USER_TYPE, login.getUsername(), -1L, null, -1, -1.0f, stockOption));
+        System.out.println(response.getContent());
+    }
+
+    protected void buy(Message response, int op) {
+        GUI.buyOps();
+        String name = cin.nextLine();
+
+        long renavam;
+
         
+        /*
+        TODO dar um jeito da tela ficar atualizando a lista de carros
+        * Usar uma thread pra ficar recuperando o valor e outra pra ficar imprimindo?
+        */
+        // Thread t0 = new Thread(new ThreadRefresh(response, name, 0));
+        // t0.start();
+        
+        response.setContent(send(1, USER_TYPE, login.getUsername(), -1, name, -1, -1, 2));
+        System.out.print("""
+                This cars are available
+                """ + 
+                response.getContent() +
+                "Renavam: ");
+
+        
+        renavam = cin.nextLong();
+        cin.nextLine();
+
+        // t0.interrupt();
+
+        System.out.println("Are you sure you want to buy this car? [y] for yes / [n] for no");
+        String confirm = cin.next(); 
+
+        if (confirm.toLowerCase().charAt(0) == 'y') {
+            response.setContent(send(op, USER_TYPE, login.getUsername(), renavam, name, -1, -1, -1));
+            cin.nextLine();
+        } else {
+            System.err.println("Cancelled operation");
+            cin.nextLine();
+        }
+
+        System.out.println(response.getContent());
+    }
+
+    protected String send(int opType, int userType, String username, long renavam, String name, int fab, float price, int category) {
+        String request = new Request(opType, userType, username, renavam, name, fab, price, category).toString();
+        String response = "";
         try {
             
             SecurityCipher bc = new SecurityCipher(this.login.getAesKey());
@@ -150,17 +217,17 @@ public class Client {
             String hash = bc.genHash(request);           
             hash = this.login.getSessionRSA().sign(hash);
 
-            Message response = dealerStub.receive(username, new Message(request, hash));
+            Message messageResponse = dealerStub.receive(username, new Message(request, hash));
 
-            if (response == null) {
-                System.err.println("cannot do this, please try again...'");
+            if (messageResponse == null) {
+                response =  "cannot do this, please try again...'";
             } else {
-                String responseTestHash = this.login.getSessionRSA().checkSign(response.getHash(), this.login.getServerPuKey());
+                String responseTestHash = this.login.getSessionRSA().checkSign(messageResponse.getHash(), this.login.getServerPuKey());
     
-                if(!bc.genHash(response.getContent()).equals(responseTestHash)) {
-                    System.err.println("an error has ocurred, please try again");
+                if(!bc.genHash(messageResponse.getContent()).equals(responseTestHash)) {
+                    response = "an error has ocurred, please try again";
                 } else {
-                    System.err.println(bc.dec(response.getContent()));
+                    response = bc.dec(messageResponse.getContent());
                 }
                 
             }
@@ -181,6 +248,8 @@ public class Client {
         } catch (RemoteException e) {
             e.printStackTrace();
         }
+
+        return response;
     }
 
 }

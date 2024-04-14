@@ -86,7 +86,7 @@ public class DealerServiceImpl implements DealerService {
 
         Request req = Request.fromString(content);
 
-        System.out.println("Request from " + username + ":" + req.toString());
+        System.out.println("DEALER: Request from " + username + " -> " + req.toString());
 
         Message response = null;
 
