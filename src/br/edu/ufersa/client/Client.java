@@ -19,20 +19,23 @@ import br.edu.ufersa.security.SecurityCipher;
 import br.edu.ufersa.server.services.skeletons.DealerService;
 import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
+import br.edu.ufersa.utils.UserType;
 
 public class Client {
 
-    private final Scanner cin = new Scanner(System.in);
-    private final int USER_TYPE = 0;
+    protected Scanner cin;
+    protected int USER_TYPE;
     protected SessionLogin login;
     protected DealerService dealerStub;
 
-    public Client() {};
+    public Client() {}
 
     public Client(SessionLogin login) {
         this.login = login;
+        this.USER_TYPE = UserType.CLIENT.getValue();
         this.exec();
     }
+
 
     // class ThreadRefresh implements Runnable {
 
@@ -63,10 +66,8 @@ public class Client {
         
     // }
 
-    //TODO voltar ao modelo antigo com várias funções e chamar elas no switch case
-
     protected void exec() {
-
+        cin = new Scanner(System.in);
         int op = 0;
 
         try {
@@ -113,6 +114,9 @@ public class Client {
                         break;
                     default:
                         System.err.println("undefined operation");
+
+                        System.out.println("Press any key to continue...");
+                        cin.nextLine();
                         break;
                 }
             } while(op != 5);

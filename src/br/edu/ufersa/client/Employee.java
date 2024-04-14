@@ -9,22 +9,21 @@ import br.edu.ufersa.entities.SessionLogin;
 import br.edu.ufersa.server.services.skeletons.DealerService;
 import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
+import br.edu.ufersa.utils.UserType;
 
 public class Employee extends Client {
-
-    private Scanner cin = new Scanner(System.in);
-    private final int USER_TYPE = 1;
 
     public Employee() {}
 
     public Employee(SessionLogin login) {
         this.login = login;
+        this.USER_TYPE = UserType.EMPLOYEE.getValue();
         this.exec();
     }
     
     @Override
-    protected void exec(){
-
+    protected void exec() {
+        this.cin = new Scanner(System.in);
         int op = 0;
 
         try {
@@ -89,6 +88,9 @@ public class Employee extends Client {
                         break;
                     default:
                         System.err.println("undefined operation");
+
+                        System.out.println("Press any key to continue...");
+                        cin.nextLine();
                         break;
                 }
             } while(op != 8);
@@ -98,11 +100,9 @@ public class Employee extends Client {
         } finally {
             cin.close();
         }
-
     }
 
     protected void add(Message response, int op) {
-
         System.out.print("Renavam: ");
         long renavam = cin.nextLong();
         cin.nextLine();
@@ -124,8 +124,8 @@ public class Employee extends Client {
         
         response.setContent(send(op, 1, login.getUsername(), renavam, name, fab, price, cat));
         System.out.println(response.getContent());
-        
     }
+
     protected void update(Message response, int op) {
         System.out.print("Renavam: ");
         long renavam = cin.nextLong();
@@ -149,6 +149,7 @@ public class Employee extends Client {
         response.setContent(send(op, 1, login.getUsername(), renavam, name, fab, price, cat));
         System.out.println(response.getContent());
     }
+
     protected void delete(Message response, int op) {
         System.out.print("Renavam: ");
         long renavam = cin.nextLong();
@@ -170,6 +171,5 @@ public class Employee extends Client {
         }
 
         System.out.println(response.getContent());
-
     }
 }
