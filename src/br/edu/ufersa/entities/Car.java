@@ -1,9 +1,12 @@
 package br.edu.ufersa.entities;
 
+import java.io.Serializable;
+
 import br.edu.ufersa.utils.CarType;
 
-public class Car {
+public class Car implements Serializable {
     
+    private static final long serialVersionUID = 1L;
     private CarType categoria;
     private long renavam;
     private String nome;

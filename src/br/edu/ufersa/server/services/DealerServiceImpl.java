@@ -1,5 +1,10 @@
 package br.edu.ufersa.server.services;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -20,7 +25,6 @@ import javax.crypto.NoSuchPaddingException;
 import br.edu.ufersa.entities.Car;
 import br.edu.ufersa.entities.Message;
 import br.edu.ufersa.entities.Request;
-// import br.edu.ufersa.entities.User;
 import br.edu.ufersa.security.RSAImpl;
 import br.edu.ufersa.security.SecurityCipher;
 import br.edu.ufersa.server.services.skeletons.DealerService;
@@ -28,13 +32,15 @@ import br.edu.ufersa.server.services.skeletons.SessionService;
 import br.edu.ufersa.utils.CarType;
 import br.edu.ufersa.utils.RSAKey;
 import br.edu.ufersa.utils.ServicePorts;
-// import br.edu.ufersa.utils.UserType;
 
 public class DealerServiceImpl implements DealerService {
 
     // TODO: Separar o banco de dados do serviço
     private static HashMap<Long, Car> cars;
     private static HashMap<String, Integer> cars_stock;
+    private static Socket databaseConnection;
+    private ObjectOutputStream output;
+    private ObjectInputStream input;
     private static SessionService sessionStub;
     private static RSAImpl rsa;
 
@@ -53,7 +59,6 @@ public class DealerServiceImpl implements DealerService {
         }
         
         RSAKey clientPuKey = sessionStub.getRSAKey(username);
-
 
         String receivedHash = rsa.checkSign(message.getHash(), clientPuKey);
         SecurityCipher bc = null;
@@ -94,7 +99,7 @@ public class DealerServiceImpl implements DealerService {
             switch (req.getOpType()) {
                 case 1:
                     response = (req.getCategory() == 1) ? 
-                    this.searchByRenavam(req.getRenavam(), bc) : 
+                    this.searchByRenavam(req.getRenavam(), req, bc) : 
                     this.searchByName(req.getName(), bc);
 
                     break;
@@ -106,8 +111,8 @@ public class DealerServiceImpl implements DealerService {
                     break;
                 case 3:
                     response = (req.getCategory() == 1) ? 
-                    this.stock(bc) : 
-                    this.stockByName(bc);
+                    this.stock(req, bc) : 
+                    this.stockByName(req, bc);
 
                     break;
                 case 4:
@@ -123,7 +128,7 @@ public class DealerServiceImpl implements DealerService {
             switch (req.getOpType()) {
                 case 1:
                     response = (req.getCategory() == 1) ? 
-                    this.searchByRenavam(req.getRenavam(), bc) : 
+                    this.searchByRenavam(req.getRenavam(), req, bc) : 
                     this.searchByName(req.getName(), bc);
 
                     break;
@@ -135,8 +140,8 @@ public class DealerServiceImpl implements DealerService {
                     break;
                 case 3:
                     response = (req.getCategory() == 1) ? 
-                    this.stock(bc) : 
-                    this.stockByName(bc);
+                    this.stock(req, bc) : 
+                    this.stockByName(req, bc);
 
                     break;
                 case 4:
@@ -146,15 +151,15 @@ public class DealerServiceImpl implements DealerService {
 
                     break;
                 case 5:
-                    response = this.add(CarType.values()[req.getCategory()], req.getRenavam(), req.getName(), req.getFab(), req.getPrice(), bc);
+                    response = this.add(req, bc);
 
                     break;
                 case 6:
-                    response = this.update(CarType.values()[req.getCategory()], req.getRenavam(), req.getName(), req.getFab(), req.getPrice(), bc);
+                    response = this.update(req, bc);
             
                     break;
                 case 7:
-                    response = this.remove(req.getRenavam(), bc);
+                    response = this.remove(req, bc);
 
                     break;
                 default:
@@ -173,6 +178,7 @@ public class DealerServiceImpl implements DealerService {
         return rsa.getPublicKey();
     }
 
+    // TODO fazer ele acessar o database separado
     private Message searchByName(String name, SecurityCipher bc) throws RemoteException {
         
         StringBuilder responseString = new StringBuilder();
@@ -204,9 +210,9 @@ public class DealerServiceImpl implements DealerService {
 
     }
 
-    private Message searchByRenavam(long renavam, SecurityCipher bc) throws RemoteException {
+    private Message searchByRenavam(long renavam, Request req, SecurityCipher bc) throws RemoteException {
 
-        Car searchedCar = cars.get(renavam);
+        Car searchedCar = dbQueryCar(req);
 
         Message response = new Message("", "");
         
@@ -222,6 +228,7 @@ public class DealerServiceImpl implements DealerService {
 
     }
 
+    // TODO fazer ele acessar o database separado
     private Message list(SecurityCipher bc) throws RemoteException {
         
         StringBuilder responseString = new StringBuilder();
@@ -247,6 +254,7 @@ public class DealerServiceImpl implements DealerService {
 
     }
 
+    // TODO fazer ele acessar o database separado
     private Message listByCategory(SecurityCipher bc) throws RemoteException {
 
         StringBuilder responseString = new StringBuilder();
@@ -307,24 +315,13 @@ public class DealerServiceImpl implements DealerService {
 
     }
     
-    private Message add(CarType categoria, long renavam, String nome, int ano_fab, float preco, SecurityCipher bc) throws RemoteException {
-
-        Car car = cars.get(renavam);
-
+    private Message add(Request req, SecurityCipher bc) throws RemoteException {
         Message response = new Message("", "");
+
+        boolean attempt = dbCrud(req);
         
-        if (car == null) {
-            car = new Car(categoria, renavam, nome, ano_fab, preco);
-            cars.put(renavam, car);
-
-            Integer quant_car = cars_stock.get(nome.toUpperCase());
-            if (quant_car == null) {
-                cars_stock.put(nome.toUpperCase(), 1);
-            } else {
-                cars_stock.put(nome.toUpperCase(), ++quant_car);
-            }
-
-            response.setContent("New car: \n" + car);
+        if (attempt) {
+            response.setContent("Successfully add the car\nPlease check the stock");
         } else {
             response.setContent("This car is already registred");
         }
@@ -332,77 +329,46 @@ public class DealerServiceImpl implements DealerService {
         this.prepare(response, bc);
 
         return response;
-
     }
 
-    private Message remove(long renavam, SecurityCipher bc) throws RemoteException {
-        
-        Car car = cars.remove(renavam);
-
+    private Message remove(Request req, SecurityCipher bc) throws RemoteException {
         Message response = new Message("", "");
+        
+        boolean attempt = dbCrud(req);
 
-        if (car == null) {
-            response.setContent("This car isn't registred");
+        if (attempt) {
+            response.setContent("Successfully remove the car\nPlease check the stock");
         } else {
-            Integer quant_car = cars_stock.get(car.getNome());
-
-            if (quant_car > 0) {
-                cars_stock.put(car.getNome(), --quant_car);
-            } 
-
-            response.setContent("Removed car: \n" + car);
+            response.setContent("Cannot remove the car");
         }
-
+        
         this.prepare(response, bc);
 
         return response;
-
     }
 
-    private Message update(CarType categoria, long renavam, String nome, int ano_fab, float preco, SecurityCipher bc) throws RemoteException {
-        
-        Car car = cars.get(renavam);
-
+    private Message update(Request req, SecurityCipher bc) throws RemoteException {        
         Message response  = new Message("", "");
         
-        if (car == null) {
-            response.setContent("This car isn't registred");
+        boolean attempt = dbCrud(req);
+
+        if (attempt) {
+            response.setContent("Successfully update the car\nPlease check the stock");
         } else {
-            Integer quant_car = cars_stock.get(car.getNome().toUpperCase());
-
-            if (quant_car > 0) {
-                cars_stock.put(car.getNome(), --quant_car);
-            } 
-
-            car.setAnoFab(ano_fab);
-            car.setCategoria(categoria);
-            car.setNome(nome);
-            car.setPreco(preco);
-            
-            cars.put(renavam, car);
-
-            quant_car = cars_stock.get(car.getNome());
-            
-            if (quant_car == null) {
-                cars_stock.put(car.getNome().toUpperCase(), 1);
-            } else {
-                cars_stock.put(car.getNome().toUpperCase(), ++quant_car);
-            }
-
-            response.setContent("Updated car: \n" + car);
+            response.setContent("Cannot update the car");
         }
-
+        
         this.prepare(response, bc);
 
         return response;
-
     }
     
-    private Message stock(SecurityCipher bc) throws RemoteException {
-
+    private Message stock(Request req, SecurityCipher bc) throws RemoteException {
         Message response = new Message("", "");
 
-        if (cars_stock.isEmpty()) {
+        String quant = dbQueryStock(req);
+
+        if (quant == null) {
             response.setContent("There is no cars registred...");
         } else {
             StringBuilder responseString = new StringBuilder();
@@ -410,7 +376,7 @@ public class DealerServiceImpl implements DealerService {
             responseString.append("""
                     = = = = = = = =  CAR STOCK  = = = = = = = =
                     """);
-            responseString.append("\tThere is " + cars.size() + " cars on stock\n");
+            responseString.append("\tThere is " + quant + " cars on stock\n");
             responseString.append("""
                     = = = = = = = = = = = = = = = = = = = = = =
                     """);
@@ -421,34 +387,18 @@ public class DealerServiceImpl implements DealerService {
         this.prepare(response, bc);
 
         return response;
-
     }
 
-    private Message stockByName(SecurityCipher bc) throws RemoteException {
+    private Message stockByName(Request req, SecurityCipher bc) throws RemoteException {
 
         Message response = new Message("", "");
 
-        if (cars_stock.isEmpty()) {
+        String quant = dbQueryStock(req);
+
+        if (quant == null) {
             response.setContent("There is no cars registred...");
         } else {
-            StringBuilder responseString = new StringBuilder();
-    
-            responseString.append("""
-                    = = = = = =  CAR STOCK  = = = = = =
-                    """);
-    
-            cars_stock.forEach((String name, Integer quant) -> {
-                responseString.append(name);
-                responseString.append("\t");
-                responseString.append("x" + quant);
-                responseString.append("\n");
-            });
-    
-            responseString.append("""
-                    = = = = = = = = = = = = = = = = = =
-                    """);
-    
-            response.setContent(responseString.toString());
+            response.setContent(quant);
         }
 
         this.prepare(response, bc);
@@ -457,8 +407,7 @@ public class DealerServiceImpl implements DealerService {
 
     }
 
-    // TODO: Fazer um bd de usuários?
-    // private Message buy(long renavam, User user) throws RemoteException {
+    // TODO fazer ele acessar o database separado
     private Message buy(long renavam, SecurityCipher bc) throws RemoteException {
         
         Car purchased_car = cars.remove(renavam);
@@ -491,6 +440,7 @@ public class DealerServiceImpl implements DealerService {
 
     }
 
+    // TODO Mover para o database
     private List<Car> getSorted(){
         List<Car> car_list = new LinkedList<>();
 
@@ -531,6 +481,7 @@ public class DealerServiceImpl implements DealerService {
         }
     }
     
+    // TODO Remover isso
     private void record(int carType, long renavam, String nome, int fab, float price) throws RemoteException {
         
         Car car = new Car(CarType.values()[carType], renavam, nome.toUpperCase(), fab, price);
@@ -545,6 +496,57 @@ public class DealerServiceImpl implements DealerService {
 
     }
 
+    private Car dbQueryCar(Request req) {
+        Car car = null;
+
+        try {
+
+            output.writeObject(req);
+            car = (Car) input.readObject();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return car;
+    }
+
+    private String dbQueryStock(Request req) {
+        String quant = "";
+
+        try {
+
+            output.writeObject(req);
+            quant = (String) input.readObject();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return quant;
+    }
+
+    private boolean dbCrud(Request req) {
+        boolean attempt = false;
+
+        try {
+
+            output.writeObject(req);
+            attempt = (Boolean) input.readObject();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return attempt;
+    }
+
     private void init() {
 
         try {
@@ -552,6 +554,12 @@ public class DealerServiceImpl implements DealerService {
             Registry reg = LocateRegistry.getRegistry("localhost", ServicePorts.SESSION_PORT.getValue());
             sessionStub = (SessionService) reg.lookup("Session");
 
+            databaseConnection = new Socket("localhost", ServicePorts.DATABASE_PORT.getValue());
+            output = new ObjectOutputStream(databaseConnection.getOutputStream());
+            input = new ObjectInputStream(databaseConnection.getInputStream());
+
+
+            // TODO Remover essa inicialização assim que terminar de separar o bd
             this.record(CarType.ECONOMY.getValue(), 72439120382l, "nissan march", 2012, 86000f);
             this.record(CarType.INTERMEDIATE.getValue(), 51029874625l, "toyota etios", 2017, 70000f);
             this.record(CarType.ECONOMY.getValue(), 14243939238l, "ford ka", 2009, 90000f);
@@ -568,13 +576,12 @@ public class DealerServiceImpl implements DealerService {
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (NotBoundException e) {
-            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
-
-
-
-
 }

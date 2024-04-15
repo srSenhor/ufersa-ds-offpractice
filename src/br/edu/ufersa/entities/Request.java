@@ -1,9 +1,12 @@
 package br.edu.ufersa.entities;
 
+import java.io.Serializable;
+
 // import br.edu.ufersa.utils.UserType;
 
-public class Request {
-
+public class Request implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
     private int opType;
     private int userType;
     private String login;
