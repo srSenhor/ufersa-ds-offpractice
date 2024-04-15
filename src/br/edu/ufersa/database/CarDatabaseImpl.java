@@ -7,7 +7,10 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.RemoteException;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import br.edu.ufersa.entities.Car;
 import br.edu.ufersa.entities.Request;
@@ -64,7 +67,14 @@ public class CarDatabaseImpl  {
 
                 switch (req.getOpType()) {
                     case 1:
-                        output.writeObject(find(req.getRenavam()));
+                        if (req.getCategory() == 1)
+                            output.writeObject(find(req.getRenavam()));
+                        else
+                            output.writeObject(findCar(req.getName()));
+                            
+                        break;
+                    case 2:
+                        output.writeObject(getSorted());
                         break;
                     case 3:
                         String quant = (req.getCategory() == 1) ?
@@ -115,9 +125,27 @@ public class CarDatabaseImpl  {
         return car;
     }
     
+    private List<Car> findCar(String name) {
+        List<Car> car_list = new LinkedList<>();
+        
+        if (cars.isEmpty()) {
+            System.out.println("DATABASE: ERROR! There is no cars in the database");
+        } else {
+            cars.forEach((Long renavam, Car car) -> {
+                if (car.getNome().equalsIgnoreCase(name)) {
+                    car_list.add(car);
+                }
+            });
+
+            System.out.println("DATABASE: Returning the list of car " + name);
+        }
+
+        return car_list;
+    }
+
     private String getStock() {
         if (cars.size() == 0) {
-            System.err.println("DATABASE: ERROR! There are no cars in database");
+            System.err.println("DATABASE: ERROR! There is no cars in database");
             return "There is no cars registred...";
         }
 
@@ -217,6 +245,29 @@ public class CarDatabaseImpl  {
         }
 
 
+    }
+
+    private List<Car> getSorted(){
+        List<Car> car_list = new LinkedList<>();
+        
+        if (cars.isEmpty()) {
+            System.out.println("DATABASE: ERROR! There is no cars in the database");
+        } else {
+            cars.forEach((Long renavam, Car car) -> {
+                car_list.add(car);
+            });
+
+            car_list.sort(new Comparator<Car>() {
+                @Override
+                public int compare(Car o1, Car o2) {
+                    return o1.getNome().compareTo(o2.getNome());
+                    
+                }            
+            });
+            System.out.println("DATABASE: Returning the sorted list of cars");
+        }
+        
+        return car_list;
     }
 
     private void init() {
