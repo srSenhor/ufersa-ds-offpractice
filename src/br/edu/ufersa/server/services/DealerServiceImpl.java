@@ -1,10 +1,5 @@
 package br.edu.ufersa.server.services;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -24,6 +19,7 @@ import br.edu.ufersa.entities.Message;
 import br.edu.ufersa.entities.Request;
 import br.edu.ufersa.security.RSAImpl;
 import br.edu.ufersa.security.SecurityCipher;
+import br.edu.ufersa.server.services.skeletons.DatabaseService;
 import br.edu.ufersa.server.services.skeletons.DealerService;
 import br.edu.ufersa.server.services.skeletons.SessionService;
 import br.edu.ufersa.utils.RSAKey;
@@ -31,9 +27,10 @@ import br.edu.ufersa.utils.ServicePorts;
 
 public class DealerServiceImpl implements DealerService {
 
-    private static Socket databaseConnection;
-    private ObjectOutputStream output;
-    private ObjectInputStream input;
+    // private static Socket databaseConnection;
+    // private ObjectOutputStream output;
+    // private ObjectInputStream input;
+    private static DatabaseService dbStub;
     private static SessionService sessionStub;
     private static RSAImpl rsa;
 
@@ -166,9 +163,9 @@ public class DealerServiceImpl implements DealerService {
     private Message searchByName(Request req, SecurityCipher bc) throws RemoteException {
         Message response = new Message("", "");        
         
-        List<Car> named_cars = dbQueryCar(req);
+        List<Car> named_cars = dbStub.findCar(req.getName());
         
-        if (named_cars.isEmpty()) {
+        if (named_cars == null || named_cars.isEmpty()) {
             response.setContent("no cars available for this name");
         } else {
             StringBuilder responseString = new StringBuilder();
@@ -188,7 +185,7 @@ public class DealerServiceImpl implements DealerService {
     private Message searchByRenavam(Request req, SecurityCipher bc) throws RemoteException {
         Message response = new Message("", "");
         
-        Car searchedCar = dbQuery(req);
+        Car searchedCar = dbStub.find(req.getRenavam());
         
         if (searchedCar == null) {
             response.setContent("cannot find the vehicle for renavam " + req.getRenavam());
@@ -204,7 +201,7 @@ public class DealerServiceImpl implements DealerService {
     private Message list(Request req, SecurityCipher bc) throws RemoteException {
         Message response = new Message("", "");
                 
-        List<Car> car_list = dbSortedList(req);
+        List<Car> car_list = dbStub.getSorted();
         
         if (car_list.isEmpty()) {
             response.setContent("no cars available in the system");
@@ -230,8 +227,7 @@ public class DealerServiceImpl implements DealerService {
         List<Car> intermediate_cars = new LinkedList<>();
         List<Car> executive_cars = new LinkedList<>();
         
-        List<Car> car_list = dbSortedList(req);
-        
+        List<Car> car_list = dbStub.getSorted();
         
         if (car_list.isEmpty()) {
             response.setContent("no cars available in the system");
@@ -285,7 +281,7 @@ public class DealerServiceImpl implements DealerService {
     private Message add(Request req, SecurityCipher bc) throws RemoteException {
         Message response = new Message("", "");
 
-        boolean attempt = dbCud(req);
+        boolean attempt = dbStub.create(req.getCategory(), req.getRenavam(), req.getName(), req.getFab(), req.getPrice());
         
         if (attempt) {
             response.setContent("Successfully add the car\nPlease check the stock");
@@ -301,7 +297,7 @@ public class DealerServiceImpl implements DealerService {
     private Message remove(Request req, SecurityCipher bc) throws RemoteException {
         Message response = new Message("", "");
         
-        boolean attempt = dbCud(req);
+        boolean attempt = dbStub.delete(req.getRenavam());
 
         if (attempt) {
             response.setContent("Successfully remove the car\nPlease check the stock");
@@ -317,7 +313,7 @@ public class DealerServiceImpl implements DealerService {
     private Message update(Request req, SecurityCipher bc) throws RemoteException {        
         Message response  = new Message("", "");
         
-        boolean attempt = dbCud(req);
+        boolean attempt = dbStub.update(req.getCategory(), req.getRenavam(), req.getName(), req.getFab(), req.getPrice());
 
         if (attempt) {
             response.setContent("Successfully update the car\nPlease check the stock");
@@ -333,7 +329,7 @@ public class DealerServiceImpl implements DealerService {
     private Message stock(Request req, SecurityCipher bc) throws RemoteException {
         Message response = new Message("", "");
 
-        String quant = dbQueryStock(req);
+        String quant = dbStub.getStock();
 
         if (quant == null) {
             response.setContent("There is no cars registred...");
@@ -359,7 +355,7 @@ public class DealerServiceImpl implements DealerService {
     private Message stockByName(Request req, SecurityCipher bc) throws RemoteException {
         Message response = new Message("", "");
 
-        String quant = dbQueryStock(req);
+        String quant = dbStub.getStock();
 
         if (quant == null) {
             response.setContent("There is no cars registred...");
@@ -375,15 +371,13 @@ public class DealerServiceImpl implements DealerService {
     private Message buy(Request req, SecurityCipher bc) throws RemoteException {
         Message response = new Message("", "");
         
-        Car purchased_car = dbQuery(new Request(1, req.getUserType(), req.getLogin(), req.getRenavam(), req.getName(), req.getFab(), req.getPrice(), 1));
+        Car purchased_car = dbStub.find(req.getRenavam());
 
-        System.out.println("Cheguei aqui");
-        
         if (purchased_car == null) {
             response.setContent("This car isn't available");
         } else {
             System.out.println("Antes de remover o carro");
-            dbCud(new Request(7, req.getUserType(), req.getLogin(), req.getRenavam(), req.getName(), req.getFab(), req.getPrice(), req.getCategory()));
+            dbStub.delete(req.getRenavam());
             System.out.println("Depois de remover o carro");
 
             StringBuilder responseString = new StringBuilder(); 
@@ -422,122 +416,18 @@ public class DealerServiceImpl implements DealerService {
         }
     }
 
-    private Car dbQuery(Request req) {
-        Car car = null;
-
-        try {
-
-            output.writeObject(req);
-            car = (Car) input.readObject();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        return car;
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<Car> dbQueryCar(Request req) {
-        List<Car> named_cars_list = null;
-
-        try {
-
-            output.writeObject(req);
-            named_cars_list = (List<Car>) input.readObject();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        return named_cars_list;
-    }
-
-    private String dbQueryStock(Request req) {
-        String quant = "";
-
-        try {
-
-            output.writeObject(req);
-            quant = (String) input.readObject();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        return quant;
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<Car> dbSortedList(Request req) {
-        List<Car> cars_list = null;
-
-        try {
-
-            output.writeObject(req);
-            cars_list = (List<Car>) input.readObject();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        return cars_list;
-    }
-
-
-    private boolean dbCud(Request req) {
-        boolean attempt = false;
-
-        try {
-
-            output.writeObject(req);
-            attempt = (Boolean) input.readObject();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        return attempt;
-    }
-
     private void init() {
-
         try {
 
             Registry reg = LocateRegistry.getRegistry("localhost", ServicePorts.SESSION_PORT.getValue());
             sessionStub = (SessionService) reg.lookup("Session");
-
-            databaseConnection = new Socket("localhost", ServicePorts.DATABASE_PORT.getValue());
-            output = new ObjectOutputStream(databaseConnection.getOutputStream());
-            input = new ObjectInputStream(databaseConnection.getInputStream());
+            Registry dbReg = LocateRegistry.getRegistry("localhost", ServicePorts.DATABASE_PORT.getValue());
+            dbStub = (DatabaseService) dbReg.lookup("Database");
             
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (NotBoundException e) {
             e.printStackTrace();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                input.close();
-                output.close();
-                databaseConnection.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
+        } 
     }
 }

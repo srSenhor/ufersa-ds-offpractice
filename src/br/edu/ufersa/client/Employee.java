@@ -6,30 +6,34 @@ import java.util.Scanner;
 
 import br.edu.ufersa.entities.Message;
 import br.edu.ufersa.entities.SessionLogin;
-import br.edu.ufersa.server.services.skeletons.DealerService;
+import br.edu.ufersa.server.services.skeletons.Proxy;
 import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
 import br.edu.ufersa.utils.UserType;
 
 public class Employee extends Client {
 
+    private static final long serialVersionUID = 1L;
+
     public Employee() {}
 
     public Employee(SessionLogin login) {
         this.login = login;
-        this.USER_TYPE = UserType.EMPLOYEE.getValue();
+        this.userType = UserType.EMPLOYEE.getValue();
         this.exec();
     }
     
     @Override
     protected void exec() {
-        this.cin = new Scanner(System.in);
+        Scanner cin = new Scanner(System.in);
         int op = 0;
 
         try {
 
-            Registry reg = LocateRegistry.getRegistry("localhost", ServicePorts.DEALER_PORT.getValue());
-            this.dealerStub = (DealerService) reg.lookup("Dealer");
+            // Registry reg = LocateRegistry.getRegistry("localhost", ServicePorts.DEALER_PORT.getValue());
+            // this.proxy = (DealerService) reg.lookup("Dealer");
+            Registry reg = LocateRegistry.getRegistry("localhost", ServicePorts.PROXY_PORT.getValue());
+            this.proxy = (Proxy) reg.lookup("Proxy");
             
             Message response = new Message("", "");
             
@@ -42,43 +46,43 @@ public class Employee extends Client {
 
                 switch (op) {
                     case 1:
-                        search(response, op);
+                        search(response, op, cin);
 
                         System.out.println("Press any key to continue...");
                         cin.nextLine();
                         break;
                     case 2:
-                        list(response, op);
+                        list(response, op, cin);
                         
                         System.out.println("Press any key to continue...");
                         cin.nextLine();
                         break;
                     case 3:
-                        stock(response, op);
+                        stock(response, op, cin);
                         
                         System.out.println("Press any key to continue...");
                         cin.nextLine();
                         break;
                     case 4:
-                        buy(response, op);
+                        buy(response, op, cin);
 
                         System.out.println("Press any key to continue...");
                         cin.nextLine();
                         break;
                     case 5:
-                        add(response, op);
+                        add(response, op, cin);
 
                         System.out.println("Press any key to continue...");
                         cin.nextLine();
                         break;
                     case 6:
-                        update(response, op);
+                        update(response, op, cin);
                         
                         System.out.println("Press any key to continue...");
                         cin.nextLine();
                         break;
                     case 7:
-                        delete(response, op);    
+                        delete(response, op, cin);    
 
                         System.out.println("Press any key to continue...");
                         cin.nextLine();
@@ -102,7 +106,7 @@ public class Employee extends Client {
         }
     }
 
-    protected void add(Message response, int op) {
+    protected void add(Message response, int op, Scanner cin) {
         System.out.print("Renavam: ");
         long renavam = cin.nextLong();
         cin.nextLine();
@@ -126,7 +130,7 @@ public class Employee extends Client {
         System.out.println(response.getContent());
     }
 
-    protected void update(Message response, int op) {
+    protected void update(Message response, int op, Scanner cin) {
         System.out.print("Renavam: ");
         long renavam = cin.nextLong();
         cin.nextLine();
@@ -150,7 +154,7 @@ public class Employee extends Client {
         System.out.println(response.getContent());
     }
 
-    protected void delete(Message response, int op) {
+    protected void delete(Message response, int op, Scanner cin) {
         System.out.print("Renavam: ");
         long renavam = cin.nextLong();
         cin.nextLine();

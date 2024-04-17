@@ -1,5 +1,6 @@
 package br.edu.ufersa.client;
 
+import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -16,26 +17,34 @@ import br.edu.ufersa.entities.Message;
 import br.edu.ufersa.entities.Request;
 import br.edu.ufersa.entities.SessionLogin;
 import br.edu.ufersa.security.SecurityCipher;
-import br.edu.ufersa.server.services.skeletons.DealerService;
+import br.edu.ufersa.server.services.skeletons.Proxy;
 import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
 import br.edu.ufersa.utils.UserType;
 
-public class Client {
+public class Client implements Serializable {
 
-    protected Scanner cin;
-    protected int USER_TYPE;
+    private static final long serialVersionUID = 1L;
+    protected int userType;
     protected SessionLogin login;
-    protected DealerService dealerStub;
+    // protected DealerService dealerStub;
+    protected Proxy proxy;
 
     public Client() {}
 
     public Client(SessionLogin login) {
         this.login = login;
-        this.USER_TYPE = UserType.CLIENT.getValue();
+        this.userType = UserType.CLIENT.getValue();
         this.exec();
     }
 
+    public int getUserType() {
+        return this.userType;
+    }
+
+    public String getUsername() {
+        return this.login.getUsername();
+    }
 
     // class ThreadRefresh implements Runnable {
 
@@ -67,59 +76,68 @@ public class Client {
     // }
 
     protected void exec() {
-        cin = new Scanner(System.in);
+        Scanner cin = new Scanner(System.in);
         int op = 0;
 
         try {
 
-            Registry reg = LocateRegistry.getRegistry("localhost", ServicePorts.DEALER_PORT.getValue());
-            this.dealerStub = (DealerService) reg.lookup("Dealer");
+            // Registry reg = LocateRegistry.getRegistry("localhost", ServicePorts.DEALER_PORT.getValue());
+            // this.proxy = (DealerService) reg.lookup("Dealer");
+            Registry reg = LocateRegistry.getRegistry("localhost", ServicePorts.PROXY_PORT.getValue());
+            this.proxy = (Proxy) reg.lookup("Proxy");
             
-            do {
-                GUI.clearScreen();
-                GUI.clientMenu();
+            // * Tentativa de acesso indevido da operação add
+            Message response = new Message("", "");
+            for (int i = 0; i < 4; i++) {
+                response.setContent(send(op, 1, login.getUsername(), 12345678910L, "Spymovel", 2024, 0, 0));
+                System.out.println(response.getContent());
+            }
 
-                op = cin.nextInt();
-                cin.nextLine();
+            // do {
+            //     GUI.clearScreen();
+            //     GUI.clientMenu();
 
-                Message response = new Message("", "");
+            //     op = cin.nextInt();
+            //     cin.nextLine();
 
-                switch (op) {
-                    case 1:
-                        search(response, op);
+            //     Message response = new Message("", "");
 
-                        System.out.println("Press any key to continue...");
-                        cin.nextLine();
-                        break;
-                    case 2:
-                        list(response, op);
+            //     switch (op) {
+            //         case 1:
+            //             search(response, op, cin);
+
+            //             System.out.println("Press any key to continue...");
+            //             cin.nextLine();
+            //             break;
+            //         case 2:
+            //             list(response, op, cin);
                         
-                        System.out.println("Press any key to continue...");
-                        cin.nextLine();
-                        break;
-                    case 3:
-                        stock(response, op);
+            //             System.out.println("Press any key to continue...");
+            //             cin.nextLine();
+            //             break;
+            //         case 3:
+            //             stock(response, op, cin);
                         
-                        System.out.println("Press any key to continue...");
-                        cin.nextLine();
-                        break;
-                    case 4:
-                        buy(response, op);
+            //             System.out.println("Press any key to continue...");
+            //             cin.nextLine();
+            //             break;
+            //         case 4:
+            //             buy(response, op, cin);
 
-                        System.out.println("Press any key to continue...");
-                        cin.nextLine();
-                        break;
-                    case 5:
-                        System.out.println("bye my friend!");
-                        break;
-                    default:
-                        System.err.println("undefined operation");
+            //             System.out.println("Press any key to continue...");
+            //             cin.nextLine();
+            //             break;
+            //         case 5:
+            //             System.out.println("bye my friend!");
+            //             break;
+            //         default:
+            //             System.err.println("undefined operation");
 
-                        System.out.println("Press any key to continue...");
-                        cin.nextLine();
-                        break;
-                }
-            } while(op != 5);
+            //             System.out.println("Press any key to continue...");
+            //             cin.nextLine();
+            //             break;
+            //     }
+            // } while(op != 5);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -129,7 +147,7 @@ public class Client {
 
     }
 
-    protected void search(Message response, int op) {
+    protected void search(Message response, int op, Scanner cin) {
         GUI.searchOps();
         int searchOption = cin.nextInt();
         cin.nextLine();
@@ -139,37 +157,37 @@ public class Client {
             long renavam = cin.nextLong();
             cin.nextLine();
 
-            response.setContent(send(op, USER_TYPE, login.getUsername(), renavam, null, -1, -1, searchOption));
+            response.setContent(send(op, userType, login.getUsername(), renavam, null, -1, -1, searchOption));
 
         } else {
             System.out.print("Name: ");
             String name = cin.nextLine();
 
-            response.setContent(send(op, USER_TYPE, login.getUsername(), -1, name, -1, -1, searchOption));
+            response.setContent(send(op, userType, login.getUsername(), -1, name, -1, -1, searchOption));
         }
 
         System.out.println(response.getContent());
     }
 
-    protected void list(Message response, int op) {
+    protected void list(Message response, int op, Scanner cin) {
         GUI.listOps();
         int listOption = cin.nextInt();
         cin.nextLine();
 
-        response.setContent(send(op, USER_TYPE, login.getUsername(), -1L, null, -1, -1.0f, listOption));
+        response.setContent(send(op, userType, login.getUsername(), -1L, null, -1, -1.0f, listOption));
         System.out.println(response.getContent());
     }
 
-    protected void stock(Message response, int op) {
+    protected void stock(Message response, int op, Scanner cin) {
         GUI.stockOps();
         int stockOption = cin.nextInt();
         cin.nextLine();
 
-        response.setContent(send(op, USER_TYPE, login.getUsername(), -1L, null, -1, -1.0f, stockOption));
+        response.setContent(send(op, userType, login.getUsername(), -1L, null, -1, -1.0f, stockOption));
         System.out.println(response.getContent());
     }
 
-    protected void buy(Message response, int op) {
+    protected void buy(Message response, int op, Scanner cin) {
         GUI.buyOps();
         String name = cin.nextLine();
 
@@ -183,7 +201,7 @@ public class Client {
         // Thread t0 = new Thread(new ThreadRefresh(response, name, 0));
         // t0.start();
         
-        response.setContent(send(1, USER_TYPE, login.getUsername(), -1, name, -1, -1, 2));
+        response.setContent(send(1, userType, login.getUsername(), -1, name, -1, -1, 2));
         System.out.print("""
                 This cars are available
                 """ + 
@@ -200,7 +218,7 @@ public class Client {
         String confirm = cin.next(); 
 
         if (confirm.toLowerCase().charAt(0) == 'y') {
-            response.setContent(send(op, USER_TYPE, login.getUsername(), renavam, name, -1, -1, -1));
+            response.setContent(send(op, userType, login.getUsername(), renavam, name, -1, -1, -1));
             cin.nextLine();
         } else {
             System.err.println("Cancelled operation");
@@ -213,15 +231,16 @@ public class Client {
     protected String send(int opType, int userType, String username, long renavam, String name, int fab, float price, int category) {
         String request = new Request(opType, userType, username, renavam, name, fab, price, category).toString();
         String response = "";
+
         try {
-            
+
             SecurityCipher bc = new SecurityCipher(this.login.getAesKey());
             request = bc.enc(request);
 
             String hash = bc.genHash(request);           
             hash = this.login.getSessionRSA().sign(hash);
 
-            Message messageResponse = dealerStub.receive(username, new Message(request, hash));
+            Message messageResponse = proxy.receive(this, opType, new Message(request, hash));
 
             if (messageResponse == null) {
                 response =  "cannot do this, please try again...'";

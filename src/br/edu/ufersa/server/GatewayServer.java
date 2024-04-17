@@ -4,6 +4,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
+import br.edu.ufersa.client.Client;
 import br.edu.ufersa.server.services.AuthServiceImpl;
 import br.edu.ufersa.server.services.DealerServiceImpl;
 import br.edu.ufersa.server.services.SessionServiceImpl;
@@ -14,9 +15,21 @@ import br.edu.ufersa.utils.GUI;
 import br.edu.ufersa.utils.ServicePorts;
 
 public class GatewayServer {
-
-    // TODO: "Threadficar" essa classe para poderem ser lançadas várias réplicas
     // TODO: Implementar firewall
+
+    private class Firewall {
+        public static boolean checkUserOperation(Client client, int operation) {
+            if (client.getUserType() == 0 && (operation > 0 && operation < 5)) {
+                return true;
+            } else if (client.getUserType() == 1 && (operation > 0 && operation < 7)) {
+                return true;
+            } else {
+                return false;
+            }
+        } 
+    }
+
+    public static boolean checkOp(Client client, int op) { return Firewall.checkUserOperation(client, op); }
     public static void main(String[] args) {
         try {
             

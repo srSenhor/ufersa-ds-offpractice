@@ -1,119 +1,30 @@
-package br.edu.ufersa.database;
+package br.edu.ufersa.server.services;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import br.edu.ufersa.entities.Car;
-import br.edu.ufersa.entities.Request;
+import br.edu.ufersa.server.services.skeletons.DatabaseService;
 import br.edu.ufersa.utils.CarType;
 
-public class CarDatabaseImpl  {
-    
-    private ServerSocket server;
-    private Socket client;
-    private InetAddress inet;
-    private ObjectInputStream input;
-    private ObjectOutputStream output;
-    private int port;
+public class DatabaseServiceImpl implements DatabaseService {
 
-    private static HashMap<Long, Car> cars;
-    private static HashMap<String, Integer> cars_stock;
+    // TODO Transformar tudo em RMI
+
+    private static ConcurrentHashMap<Long, Car> cars;
+    private static ConcurrentHashMap<String, Integer> cars_stock;
     
-    public CarDatabaseImpl(int port) {
-        this.port = port;
-        cars = new HashMap<>();
-        cars_stock = new HashMap<>();
+    public DatabaseServiceImpl() {
+        cars = new ConcurrentHashMap<>();
+        cars_stock = new ConcurrentHashMap<>();
 
         this.init();
-        this.exec();
     }
 
-    public void exec() {
-        
-        try {
-            
-            server = new ServerSocket(port);
-            this.inet = server.getInetAddress();
-
-            System.out.println("DATABASE: Initialized at " 
-            + inet.getHostName() 
-            + ":"
-            + this.port);
-
-            System.out.println("DATABASE: Waiting for connections...");
-            
-            client = server.accept();
-            System.out.println("DATABASE: Connected with " 
-            + client.getInetAddress().getHostName()
-            + ":"
-            + client.getPort());
-            
-
-            output = new ObjectOutputStream(client.getOutputStream());
-            input = new ObjectInputStream(client.getInputStream());
-
-            
-            while (true) {
-                Request req = (Request) input.readObject();
-
-                switch (req.getOpType()) {
-                    case 1:
-                        if (req.getCategory() == 1)
-                            output.writeObject(find(req.getRenavam()));
-                        else
-                            output.writeObject(findCar(req.getName()));
-                            
-                        break;
-                    case 2:
-                        output.writeObject(getSorted());
-                        break;
-                    case 3:
-                        String quant = (req.getCategory() == 1) ?
-                        Integer.toString(cars.size()) :
-                        this.getStock();
-
-                        output.writeObject(quant);
-                        break;
-                    case 5:
-                        output.writeObject(create(req.getCategory(), req.getRenavam(), req.getName(), req.getFab(), req.getPrice()));
-                        break;
-                    case 6:
-                        output.writeObject(update(req.getCategory(), req.getRenavam(), req.getName(), req.getFab(), req.getPrice()));
-                        break;
-                    case 7:
-                        output.writeObject(delete(req.getRenavam()));
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                input.close();
-                output.close();
-                client.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        };
-    }
-
-    private Car find(long renavam) {
+    public Car find(long renavam) {
         Car car = cars.get(renavam);
 
         if (car != null) {
@@ -125,7 +36,7 @@ public class CarDatabaseImpl  {
         return car;
     }
     
-    private List<Car> findCar(String name) {
+    public List<Car> findCar(String name) {
         List<Car> car_list = new LinkedList<>();
         
         if (cars.isEmpty()) {
@@ -143,7 +54,7 @@ public class CarDatabaseImpl  {
         return car_list;
     }
 
-    private String getStock() {
+    public String getStock() {
         if (cars.size() == 0) {
             System.err.println("DATABASE: ERROR! There is no cars in database");
             return "There is no cars registred...";
@@ -171,7 +82,7 @@ public class CarDatabaseImpl  {
         
     }
 
-    private boolean create(int carType, long renavam, String nome, int fab, float price) throws RemoteException {
+    public boolean create(int carType, long renavam, String nome, int fab, float price) throws RemoteException {
 
         Car car = cars.get(renavam);
 
@@ -194,7 +105,7 @@ public class CarDatabaseImpl  {
 
     }
 
-    private boolean update(int carType, long renavam, String nome, int fab, float price) throws RemoteException {
+    public boolean update(int carType, long renavam, String nome, int fab, float price) throws RemoteException {
         
         Car car = cars.get(renavam);
 
@@ -227,7 +138,7 @@ public class CarDatabaseImpl  {
             return true;
     }
 
-    private boolean delete(long renavam) {
+    public boolean delete(long renavam) {
 
         Car car = cars.remove(renavam);
         
@@ -247,7 +158,7 @@ public class CarDatabaseImpl  {
 
     }
 
-    private List<Car> getSorted(){
+    public List<Car> getSorted(){
         List<Car> car_list = new LinkedList<>();
         
         if (cars.isEmpty()) {

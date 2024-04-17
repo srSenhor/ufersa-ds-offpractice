@@ -86,6 +86,7 @@ public class App {
     }
 
     private void mainMenu(SessionLogin login){
+        // TODO Verificar porque ele não consegue passar do login, suspeito que seja a porta que eu usei
 
         switch (login.getType()) {
             case CLIENT:
