@@ -11,6 +11,7 @@ O que tiver riscado e com um ✔️ eu já concluí, o que tiver riscado com um 
 - [ ] Implementar firewall com proxy reverso (não precisa necessariamente, basta bloquear pela operação)
 - [ ] Fazer replicação do bd e dos serviços
 - [ ] Fazer sincronia das réplicas
+- [ ] Trocar o hashmap por concurrenthashmap pra garantir a integridade dos dados
 - [ ] Fazer algoritmo de eleição do valentão
 - [ ] Sincronizar os bancos de dados, bloqueando a escrita enquanto alguem estiver o usando OU organizando as escritas via relógio de lamport/vetorial
 - [ ] Testar com máquinas diferentes
